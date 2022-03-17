@@ -5,10 +5,20 @@ import pandas as pd
 import psycopg2
 import requests
 
+from utils import build_api_url
+
 
 class Pipeline:
     def __init__(self):
         pass
+
+    def get_locations(self) -> pd.DataFrame:
+        """
+        Get the current set of latitude/longitude coordinates
+        :return: A DataFrame of latitude/longitude coordinates
+        """
+        # TODO - create a database table to hold these values instead
+        return pd.read_csv("data.csv")
 
     def check_latest_insert(self):
         """
@@ -17,12 +27,18 @@ class Pipeline:
         """
         pass
 
-    def fetch_data(self):
+    def fetch_data(self, lat, lng) -> pd.DataFrame:
         """
         Fetch data from the API
-        :return: None
+        :param lat: Latitude coordinate
+        :param lng: Longitude coordinate
+        :return: A DataFrame of weather data
         """
-        pass
+        url = build_api_url(lat, lng)
+
+        # Fetch data and convert to dataframe
+        r = requests.get(url)
+        return pd.DataFrame(r.json()["hourly"])
 
     def preprocess_data(self):
         """
@@ -43,7 +59,13 @@ class Pipeline:
         Run the full ETL pipeline
         :return: None
         """
-        self.check_latest_insert()
-        self.fetch_data()
-        self.preprocess_data()
-        self.insert_data()
+        locations = self.get_locations()
+
+        for i in range(locations.shape[0]):
+            location = locations.iloc[i]
+
+            data = self.fetch_data(location["lat"], location["lng"])
+
+            self.check_latest_insert()
+            self.preprocess_data()
+            self.insert_data()
