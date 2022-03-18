@@ -44,7 +44,7 @@ class Pipeline:
         return timestamp
 
     @staticmethod
-    def fetch_data(lat, lng) -> pd.DataFrame:
+    def fetch_data(lat: str, lng: str) -> pd.DataFrame:
         """
         Fetch data from the API
         :param lat: Latitude coordinate
@@ -72,15 +72,15 @@ class Pipeline:
         return data[data["time"] > timestamp]
 
     @staticmethod
-    def check_data(data: pd.DataFrame):
+    def check_data(data: pd.DataFrame) -> bool:
         """
         Perform checks on data integrity
         :param data: A DataFrame of hourly weather data
-        :return: None
+        :return: A boolean value. True if the data is valid, False otherwise
         """
         # We may want to perform additional data checks here. For now I'm just
         # checking for any null values.
-        return data.isnull().values.any()
+        return not data.isnull().values.any()
 
     def insert_data(self, location_id: str, data: pd.DataFrame):
         """
@@ -110,7 +110,7 @@ class Pipeline:
             data = self.fetch_data(location["latitude"], location["longitude"])
 
             # Check data integrity before continuing
-            if self.check_data(data):
+            if not self.check_data(data):
                 logging.critical(
                     "Data integrity problems detected. Aborting data insertion for %f %f",
                     location["latitude"], location["longitude"]
