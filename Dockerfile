@@ -6,4 +6,4 @@ ENV PGDATABASE ""
 ENV PGPASSWORD ""
 ENV PGPORT ""
 
-CMD ["python3", "-c", "print(\"Hello, World!\")"]
+CMD ["python3", "worker.py"]

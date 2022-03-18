@@ -1,5 +1,5 @@
 from sqlalchemy import MetaData, Table, Column, Float, Integer, \
-    ForeignKey, ForeignKeyConstraint
+    ForeignKey, ForeignKeyConstraint, DateTime
 
 meta = MetaData()
 
@@ -20,6 +20,7 @@ hourly_weather = Table(
     Column("cloudcover", Integer),
     Column("precipitation", Float),
     Column("weathercode", Integer),
+    Column("time", DateTime, nullable=False),
     Column("location_id", Integer, ForeignKey("location.id"))
 )
 
