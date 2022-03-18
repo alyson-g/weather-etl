@@ -1,44 +1,69 @@
-# data-eng-exam
+# Description
 
-project
----
-Implement a sync worker that collects historical and forecast weather data. Collected data will need to be re-shaped and inserted into a PostgreSQL database; you are additionally responsible for the schema of this database. The worker will be expected to collect weather data for a dynamic number of locations.
+This project implements a sync worker that can be run on an hourly 
+basis to collect weather related data from [Open-Meteo](https://open-meteo.com/en/docs).
+The data will be inserted into a PostgreSQL database.
 
-The sync worker is expected to run on a continuous schedule, updating historical and forecast weather data **once per hour**. The sync worker should be insulated against API or deployment outages, such that if the worker fails to run for a number of hours, whenever it is able to resume it is ready to backfill all missing data (or as much as possible to recover via the given API). Aside from delays in new updates, the database should never be in an intermediate or otherwise corrupted state in terms of data integrity.
+# Database Setup
 
-api
----
-You will need to pull a variety of datapoints from [Open-Meteo](https://open-meteo.com/en). This is a free API that has no `api-key` or `OAuth` requirements.
+A `database.sql` file is provided in the `/database` folder. However, it
+is unnecessary to manually initialize the database. Each time the sync 
+worker runs, it will check if the database has been set up. If it has not, it
+will automatically create the required database and tables. It will also seed
+the `location` table with data provided in a file called `data.csv` located
+in the root directory.
 
-From **Open-Meteo**, you'll need to pull the following **hourly** datapoints for all currently available `lat,lng` coordinates:
-- temperature_2m (°F)
-- relativehumidity_2m
-- dewpoint_2m (°F)
-- pressure_msl
-- cloudcover
-- precipitation (inch)
-- weathercode
+# Running the Sync Worker
 
-This API is limited to returning only the past **2 days** of historical data, so upon initializing a new coordinate the sync worker is only expected to backfill that limited window of historical data. Otherwise, as the sync worker runs, it should be continuously updating a **historical** collection of the above datapoints, as well as caching the next 7 days of **forecast** data. To this end, you'll be expected to design a schema that robustly captures these two growing collections.
+To run the sync worker locally you will first need to create a `.env` file.
+A sample `.env.example` file has been provided. Variables that begin with `PG`
+refer to the PostgreSQL database credentials. `LOGLEVEL` determines the minimum log
+level that will be written to the log file `app.log`. The default log level if none is 
+provided is `ERROR`.
 
-materials
----
-The sync worker should expect to connect to the PostgreSQL database by way the following environment variables:
-```
-export PGHOST=...
-export PGUSER=...
-export PGDATABASE=...
-export PGPASSWORD=...
-export PGPORT=...
-```
-Additionally, you will be provided a `data.csv` containing `lat,lng` pairs. This is the initial workload of locations for the sync worker.
+## Running Locally
 
-deliverable
----
-The deliverable here should be a **Python** program that polls the API and writes to the given PostgreSQL database. All dependencies for this program should be packaged via a `requirements.txt` and a `Dockerfile`. The worker should be expected to run on **Linux** inside a **Docker** container.
+To run the application locally, first install all requirements using the 
+command:
 
-Additionally, you are expected to provide a `.sql` script that captures all of the `CREATE TABLE` and associated expressions required to initialize the database to the desired schema.
+> pip3 install -r requirements.txt
 
-Please include instructions in `README.md` on how to launch the application as well as to run tests, if any.
+You will then be able to run the worker using the command:
 
-Project should be uploaded by way of a **pull-request** created for this repo. Ideally, the work is staged in a series of incremental commits that document the implementation process. Please try to avoid a single, all-encompassing commit that includes the entire implementation.
+> python3 worker.py
+
+## Running on Docker
+
+To run the application in Docker, first build the container:
+
+> docker build . -t dataeng
+
+Then you can either pass in environment variables using a `.env` file as described
+above using the command:
+
+> docker run --env-file=.env dataeng
+
+
+Alternatively, you can pass environment variables into Docker's `run` command directly:
+
+> docker run -e PGHOST=localhost -e PGUSER=postgres -e PGDATABASE=weather 
+> -e PGPASSWORD=password -e PGPORT=5432 -e LOGLEVEL=INFO dataeng
+
+
+# Running Tests
+
+To run tests locally, follow the steps above for setting up your local environment. 
+You can then use this command to run tests:
+
+> python3 -m unittest
+
+
+To run tests in Docker, use this command if using a `.env` file:
+
+> docker run --env-file=.env dataeng python3 -m unittest
+
+Or alternatively:
+
+> docker run -e PGHOST=localhost -e PGUSER=postgres -e PGDATABASE=weather 
+> -e PGPASSWORD=password -e PGPORT=5432 -e LOGLEVEL=INFO dataeng
+> python3 -m unittest

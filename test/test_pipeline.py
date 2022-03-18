@@ -50,7 +50,7 @@ class TestPipeline(unittest.TestCase):
         pipeline = Pipeline()
 
         # Create test data and timestamp
-        data = pd.read_csv("./test_data/clean_data.csv")
+        data = pd.read_csv("./test/test_data/clean_data.csv")
         data = data.drop(["location_id"], axis=1)
         timestamp = datetime(2022, 3, 18)
 
@@ -68,14 +68,14 @@ class TestPipeline(unittest.TestCase):
 
         with self.subTest(pipeline=pipeline):
             # Test clean data set
-            clean_data = pd.read_csv("./test_data/clean_data.csv")
+            clean_data = pd.read_csv("./test/test_data/clean_data.csv")
             clean_data = clean_data.drop(["location_id"], axis=1)
 
             self.assertTrue(pipeline.check_data(clean_data))
 
         with self.subTest(pipeline=pipeline):
             # Test data set with missing data
-            bad_data = pd.read_csv("./test_data/bad_data.csv")
+            bad_data = pd.read_csv("./test/test_data/bad_data.csv")
             bad_data = bad_data.drop(["location_id"], axis=1)
             self.assertFalse(pipeline.check_data(bad_data))
 
@@ -84,7 +84,7 @@ class TestPipeline(unittest.TestCase):
         Test the insert_data function
         :return: None
         """
-        data = pd.read_csv("./test_data/clean_data.csv")
+        data = pd.read_csv("./test/test_data/clean_data.csv")
         data = data.drop(["location_id"], axis=1)
 
         with patch.object(Pipeline, 'insert_data', return_value=None) as mock_method:
@@ -104,6 +104,7 @@ class TestPipeline(unittest.TestCase):
             pipeline.run_all()
 
         mock_method.run_all()
+
 
 if __name__ == '__main__':
     unittest.main()
